@@ -10,7 +10,7 @@ COPY pyproject.toml uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project
 
-COPY src/backend/ ./backend
+COPY src/backend ./src/backend
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen
@@ -21,16 +21,20 @@ FROM python:3.12-slim-bookworm
 WORKDIR /app
 
 COPY --from=builder /app/.venv /app/.venv
-COPY --from=builder /app/backend /app/backend
+COPY --from=builder /app/src/backend /app/src/backend
 
-COPY alembic.ini ./alembic.ini
-COPY alembic ./alembic
+COPY src/backend/alembic.ini .
+COPY src/backend/alembic ./alembic
 
-ENV PATH="/app/.venv/bin:${PATH}"
-ENV PYTHONPATH="/app"
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/src"
 
-COPY entrypoint.sh .
+WORKDIR /app/src/backend
+
+COPY src/backend/entrypoint.sh .
+
 RUN chmod +x entrypoint.sh
 
 EXPOSE 8000
+
 ENTRYPOINT ["./entrypoint.sh"]

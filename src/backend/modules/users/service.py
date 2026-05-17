@@ -11,10 +11,24 @@ class UserService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def register_user(self, user_data: UserRegister):
-        query = select(User).where(User.email == user_data.email)
+    async def get_user_by_email(self, email: str) -> User | None:
+        """
+        Возвращает пользователя по email
+        :param email:
+        :return: User or None
+        """
+        query = select(User).where(User.email == email)
         result = await self.db.execute(query)
-        existing_user = result.scalar_one_or_none()
+        user = result.scalar_one_or_none()
+        return user
+
+    async def add_user(self, user_data: UserRegister) -> User:
+        """
+        Создает пользователя в базе данных
+        :param user_data: поля с UserRegister
+        :return: User
+        """
+        existing_user = await self.get_user_by_email(user_data.email)
 
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already registered")
