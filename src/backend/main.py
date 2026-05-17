@@ -5,7 +5,9 @@ import uvicorn
 from fastapi import FastAPI
 
 import modules
+
 app = FastAPI()
+
 
 def register_routers():
     for _, module_name, ispkg in pkgutil.iter_modules(modules.__path__):

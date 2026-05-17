@@ -4,11 +4,12 @@ from pathlib import Path
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 class Settings(BaseSettings):
     DATABASE_URL: str
+    ALEMBIC_DATABASE_URL: str
     REDIS_URL: str
     SECURITY_KEY: SecretStr
 

@@ -8,7 +8,7 @@ from modules.users.models import User, UserRole
 
 
 class UserService:
-    def __init__(self, db: AsyncSession ):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
     async def register_user(self, user_data: UserRegister):
