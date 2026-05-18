@@ -11,27 +11,21 @@ settings = get_settings()
 ph = PasswordHasher()
 
 config = AuthXConfig(
-    JWT_SECRET_KEY=settings.SECURITY_KEY.get_secret_value(),
-
-    JWT_TOKEN_LOCATION=["headers", "cookies"],
-
-    JWT_COOKIE_SECURE=True,
-    JWT_COOKIE_CSRF_PROTECT=True,
-    JWT_COOKIE_SAMESITE="strict",
-
+    JWT_SECRET_KEY=settings.JWT_SECURITY_KEY.get_secret_value(),
+    JWT_TOKEN_LOCATION=["headers"],
     JWT_ACCESS_TOKEN_EXPIRES=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRES),
     JWT_REFRESH_TOKEN_EXPIRES=timedelta(days=settings.REFRESH_TOKEN_EXPIRES),
 )
 
-authx = AuthX(config=config)
+jwt_security = AuthX(config=config)
 
 
 def hash_password(password: str) -> str:
     return ph.hash(password)
 
 
-def verify_password(hashed_password: str) -> bool:
+def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
-        return ph.verify(hashed_password, ph.hash(hashed_password))
+        return ph.verify(hashed_password, plain_password)
     except VerifyMismatchError:
         return False

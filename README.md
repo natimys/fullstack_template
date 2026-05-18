@@ -12,7 +12,7 @@ Backend:
 Frontend:
 - React.js
 - Tailwind CSS
-- Vue.js
+- Next.js
 
 ## ⚡ Разворачивание приложения
 1) Заполните `.env` согласно шаблону `.env.example`

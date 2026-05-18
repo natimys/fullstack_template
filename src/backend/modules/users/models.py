@@ -16,7 +16,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     role: Mapped[UserRole] = mapped_column()
-    email: Mapped[str] = mapped_column(String)
+    email: Mapped[str] = mapped_column(String, unique=True, index=True)
     name: Mapped[str] = mapped_column(String(50))
 
-    password: Mapped[str] = mapped_column(String)
+    password: Mapped[str] = mapped_column(String, nullable=False)

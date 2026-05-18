@@ -11,16 +11,18 @@ class Settings(BaseSettings):
     DATABASE_URL: str
     ALEMBIC_DATABASE_URL: str
     REDIS_URL: str
-    SECURITY_KEY: SecretStr
+    JWT_SECURITY_KEY: SecretStr
 
     REFRESH_TOKEN_EXPIRES: int  # в днях
     ACCESS_TOKEN_EXPIRES: int  # в минутах
+
+    DEBUG: bool
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra='ignore'
+        extra="ignore",
     )
 
 

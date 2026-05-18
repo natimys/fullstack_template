@@ -3,7 +3,6 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from core.security import hash_password
-from modules.auth.schemas import UserRegister
 from modules.users.models import User, UserRole
 
 
@@ -22,24 +21,36 @@ class UserService:
         user = result.scalar_one_or_none()
         return user
 
-    async def add_user(self, user_data: UserRegister) -> User:
+    async def get_user_by_id(self, user_id: int) -> User | None:
+        query = select(User).where(User.id == user_id)
+        result = await self.db.execute(query)
+        user = result.scalar_one_or_none()
+        return user
+
+    async def create_user(
+            self,
+            email: str,
+            name: str,
+            password: str,
+            role: UserRole = UserRole.USER
+    ) -> User:
         """
-        Создает пользователя в базе данных
-        :param user_data: поля с UserRegister
-        :return: User
+        :param email:
+        :param name:
+        :param password:
+        :param role:
+        :return:
         """
-        existing_user = await self.get_user_by_email(user_data.email)
+        existing_user = await self.get_user_by_email(email)
 
         if existing_user:
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        hashed_password = hash_password(user_data.password.get_secret_value())
-
         new_user = User(
-            email=user_data.email,
-            name=user_data.name,
-            password=hashed_password,
-            role=UserRole.USER
+            email=email,
+            name=name,
+            password=password,
+            role=role
         )
         self.db.add(new_user)
         await self.db.commit()
