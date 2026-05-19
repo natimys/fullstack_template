@@ -1,8 +1,8 @@
-from core.modules import Module
+from core.modules import ModuleDefinition
 
-module = Module(
+module = ModuleDefinition(
     active=True,
     name="auth",
-    router_prefix="auth",
+    router_prefix="/auth",
     router_tags=["auth"],
 )

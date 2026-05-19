@@ -4,6 +4,7 @@ from pathlib import Path
 
 app = typer.Typer()
 
+
 def get_project_root() -> Path:
     current_dir = Path(__file__).resolve()
     for parent in current_dir.parents:
@@ -11,8 +12,10 @@ def get_project_root() -> Path:
             return parent
     return Path(__file__).resolve().parents[2]
 
-path = get_project_root
+
+root = get_project_root()
+print(root)
 
 @app.command()
-def create_module(module_name: str)
+def create_module(module_name: str):
     pass

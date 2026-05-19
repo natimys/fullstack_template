@@ -1,59 +1,33 @@
-from fastapi import HTTPException
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from core.exceptions import UserAlreadyExists
 from core.security import hash_password
-from modules.users.models import User, UserRole
-
+from .models import UserRole
+from .repository import UserRepository
 
 class UserService:
-    def __init__(self, db: AsyncSession):
-        self.db = db
+    def __init__(self, repository: UserRepository):
+        self.repository = repository
 
-    async def get_user_by_email(self, email: str) -> User | None:
-        """
-        Возвращает пользователя по email
-        :param email:
-        :return: User or None
-        """
-        query = select(User).where(User.email == email)
-        result = await self.db.execute(query)
-        user = result.scalar_one_or_none()
-        return user
+    async def get_user_by_id(self, user_id: int):
+        return await self.repository.get_user_by_id(user_id)
 
-    async def get_user_by_id(self, user_id: int) -> User | None:
-        query = select(User).where(User.id == user_id)
-        result = await self.db.execute(query)
-        user = result.scalar_one_or_none()
-        return user
+    async def get_user_by_email(self, email: str):
+        return await self.repository.get_user_by_email(email)
 
-    async def create_user(
-            self,
-            email: str,
-            name: str,
-            password: str,
-            role: UserRole = UserRole.USER
-    ) -> User:
-        """
-        :param email:
-        :param name:
-        :param password:
-        :param role:
-        :return:
-        """
-        existing_user = await self.get_user_by_email(email)
-
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email already registered")
-
-        new_user = User(
-            email=email,
-            name=name,
-            password=password,
-            role=role
+    async def register(self, email: str, name: str, password: str):
+        user_exists = await self.repository.get_user_by_email(email)
+        if user_exists:
+            raise UserAlreadyExists()
+        user = await self.repository.create_user(
+            email,
+            name,
+            hash_password(password),
+            role=UserRole.USER
         )
-        self.db.add(new_user)
-        await self.db.commit()
-        await self.db.refresh(new_user)
+        return user
 
-        return new_user
+    async def change_password(self, email: str, new_password: str):
+        user = await self.repository.get_user_by_email(email)
+        if not user:
+            return
+        user.password = hash_password(new_password)
+        await self.repository.save_user(user)

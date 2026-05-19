@@ -9,7 +9,9 @@ from modules.users.models import User
 from modules.users.service import UserService
 from core.security import jwt_security
 
-def get_auth_service(user_service: UserService = Depends(get_user_service)) -> AuthService:
+def get_auth_service(
+        user_service: UserService = Depends(get_user_service)
+) -> AuthService:
     return AuthService(user_service)
 
 async def get_current_user(
@@ -17,5 +19,5 @@ async def get_current_user(
         user_service: UserService = Depends(get_user_service)
 ) -> User:
     user_id = UUID(token.sub)
-
-    user = await user_service.get_user_by_id(user_id)
+    user = await user_service.get_user_by_id(int(user_id))
+    return user
