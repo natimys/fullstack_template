@@ -26,17 +26,12 @@ async def login(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
 ):
-    user = await auth_service.authenticate(data)
-    access_token = jwt_security.create_access_token(uid=str(user.id))
-    refresh_token = jwt_security.create_refresh_token(uid=str(user.id))
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-    )
-    return {"access_token": access_token}
+    access_token, refresh_token = await auth_service.authenticate(data)
+
+    jwt_security.set_access_cookies(access_token, response)
+    jwt_security.set_refresh_cookies(refresh_token, response)
+
+    return {"message": "success"}
 
 
 @router.post("/refresh/")
@@ -47,17 +42,14 @@ async def refresh(
     user_id = payload.sub()
     access_token = jwt_security.create_access_token(uid=user_id)
     refresh_token = jwt_security.create_refresh_token(uid=user_id)
-    response.set_cookie(
-        key="refresh_token",
-        value=refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-    )
-    return {"access_token": access_token}
+
+    jwt_security.set_access_token(access_token, response)
+    jwt_security.set_refresh_cookies(refresh_token, response)
+
+    return {"message": "success"}
 
 
-@router.get("/me/")
+@router.get("/me/", response_model=UserPublic)
 async def me(
     payload=Depends(jwt_security.access_token_required),
     user_service: UserService = Depends(get_user_service),
@@ -68,4 +60,4 @@ async def me(
 @router.get("/logout/")
 async def logout(response: Response):
     response.delete_cookie(key="refresh_token")
-    return {"detail": "logged out"}
+    return {"message": "logged out"}

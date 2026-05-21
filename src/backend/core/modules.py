@@ -54,18 +54,18 @@ def register_modules(app: FastAPI):
         module = load_module_definition(module_name)
 
         if module is None:
-            logger.warning(f"❌ {module_name} metadata not found")
+            logger.warning(f"❌ <{module_name}> metadata not found")
             continue
 
         if not module.active:
-            logger.warning(f"⛔ {module_name} is inactive")
+            logger.warning(f"⛔ <{module_name}> is inactive")
             continue
 
         router = load_router(module_name)
 
         if router is None:
-            logger.warning(f"⚠️ {module_name} router not found")
+            logger.warning(f"⚠️ <{module_name}> router not found")
             continue
 
         app.include_router(router)
-        logger.info(f"Module {module_name} router loaded successfully")
+        logger.info(f"✅ Module <{module_name}> router loaded successfully")
