@@ -29,5 +29,17 @@ services:
       db:
         condition: service_healthy
 
+  frontend:
+    restart: no
+    build:
+      context: src/frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+    depends_on:
+      - backend
+
 volumes:
   pg_data:
