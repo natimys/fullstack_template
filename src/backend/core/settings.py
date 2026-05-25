@@ -13,6 +13,11 @@ class Settings(BaseSettings):
     REDIS_URL: str
     JWT_SECURITY_KEY: SecretStr
 
+    CORS_ORIGINS: list[str]
+    CORS_ALLOW_CREDENTIALS: bool
+    CORS_ALLOW_METHODS: list[str]
+    CORS_ALLOW_HEADERS: list[str]
+
     REFRESH_TOKEN_EXPIRES: int  # в днях
     ACCESS_TOKEN_EXPIRES: int  # в минутах
 

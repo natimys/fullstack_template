@@ -2,7 +2,9 @@ import uvicorn
 from core.exceptions import AppException
 from core.modules import register_modules
 from core.security import jwt_security
+from core.settings import get_settings
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 
@@ -12,6 +14,14 @@ bearer_scheme = HTTPBearer()
 jwt_security.handle_errors(app)
 
 register_modules(app)
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=settings.CORS_ALLOW_CREDENTIALS,
+    allow_methods=settings.CORS_ALLOW_METHODS,
+)
 
 
 @app.exception_handler(AppException)
