@@ -24,7 +24,6 @@ class AuthService:
         if not user or not verify_password(plain_password=password, hashed_password=user.password):
             raise InvalidAuthCredentials()
         access_token = jwt_security.create_access_token(uid=str(user.id))
-        print(f"!!!!!!!!!!!!!!!!!!!!!!!!!{access_token}")
         refresh_token = jwt_security.create_refresh_token(uid=str(user.id))
 
         return access_token, refresh_token

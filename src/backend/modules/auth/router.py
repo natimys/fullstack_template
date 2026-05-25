@@ -54,7 +54,7 @@ async def me(
     payload=Depends(jwt_security.access_token_required),
     user_service: UserService = Depends(get_user_service),
 ):
-    return await user_service.get_user_by_id(int(payload.sub()))
+    return await user_service.get_user_by_id(int(payload.sub))
 
 
 @router.get("/logout/")
