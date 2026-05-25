@@ -7,16 +7,15 @@ from loguru import logger
 def bootstrap_models():
     for module_name in iter_module_names():
         module = load_module_definition(module_name)
-        pretty_module_name = f"[bold green]{module_name}[/bold green]"
         if module is None:
-            logger.warning(f"🔁 Skipping {pretty_module_name}. Module definition not found")
+            logger.warning(f"🔁 Skipping <{module_name}>. Module definition not found",)
             continue
 
         if not module.active:
-            logger.info(f"🔁 Skipping {pretty_module_name}. Module is inactive")
+            logger.info(f"🔁 Skipping <{module_name}>. Module is inactive")
             continue
 
         module_path = f"modules.{module_name}.models"
         if find_spec(module_path):
             importlib.import_module(module_path)
-            logger.debug(f"✅ Successfully bootstrapped models for {pretty_module_name}")
+            logger.debug(f"✅ Successfully bootstrapped models for <{module_name}>")

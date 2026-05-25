@@ -1,5 +1,5 @@
 import uvicorn
-from core.exceptions import AppException, UserAlreadyExists
+from core.exceptions import AppException
 from core.modules import register_modules
 from core.security import jwt_security
 from core.settings import get_settings
@@ -7,18 +7,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from loguru import logger
-from rich.logging import RichHandler
 
-settings = get_settings()
-logger.remove()
-
-logger.add(
-    RichHandler(markup=True, rich_tracebacks=True),
-    format="{message}",
-    level="INFO",
-)
-logger.add("logs/app.log", rotation="10 MB", level="INFO")
 app = FastAPI(swagger_ui_init_oauth={})
 bearer_scheme = HTTPBearer()
 
