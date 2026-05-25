@@ -1,0 +1,8 @@
+from core.modules import ModuleDefinition
+
+{{ name.lower() }} = ModuleDefinition(
+    active=True,
+    name="{{ name }}",
+    router_prefix="/{{ name.lower() }}",
+    router_tags=["{{ name }}"],
+)

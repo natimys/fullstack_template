@@ -1,21 +1,12 @@
 import typer
-from rich import print
-from pathlib import Path
+from rich.console import Console
+from cli.config import (root, CLI_DIR, TEMPLATE_DIR)
 
 app = typer.Typer()
 
-
-def get_project_root() -> Path:
-    current_dir = Path(__file__).resolve()
-    for parent in current_dir.parents:
-        if (parent / "uv.lock").exists() or (parent / "pyproject.toml").exists():
-            return parent
-    return Path(__file__).resolve().parents[2]
-
-
-root = get_project_root()
-print(root)
+console = Console()
 
 @app.command()
-def create_module(module_name: str):
-    pass
+def create(module_name: str):
+    console.print(root, style="magenta")
+    console.print(f"created {module_name}!", style="bold green")
