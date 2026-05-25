@@ -4,7 +4,7 @@ from loguru import logger
 
 from ..users.dependencies import get_user_service
 from ..users.service import UserService
-from .dependencies import get_auth_service
+from .dependencies import get_auth_service, login_and_set_cookies, refresh_session_and_set_cookies
 from .module import module
 from .schemas import UserLogin, UserPublic, UserRegister
 from .service import AuthService
@@ -20,39 +20,6 @@ async def register(
     return user
 
 
-@router.post("/login/")
-async def login(
-    data: UserLogin,
-    response: Response,
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    access_token, refresh_token = await auth_service.authenticate(data)
-
-    jwt_security.set_access_cookies(access_token, response)
-    jwt_security.set_refresh_cookies(refresh_token, response)
-
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-    }
-
-
-@router.post("/refresh/")
-async def refresh(
-    response: Response,
-    payload=Depends(jwt_security.refresh_token_required),
-    auth_service: AuthService = Depends(get_auth_service),
-):
-    user_id = payload.sub
-    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!{user_id}")
-    access_token, refresh_token = await auth_service.authenticate(user_id)
-
-    jwt_security.set_access_token(access_token, response)
-    jwt_security.set_refresh_cookies(refresh_token, response)
-
-    return {"message": "success"}
-
-
 @router.get("/me/", response_model=UserPublic)
 async def me(
     payload=Depends(jwt_security.access_token_required),
@@ -61,7 +28,22 @@ async def me(
     return await user_service.get_user_by_id(int(payload.sub))
 
 
+@router.post("/refresh/")
+async def refresh(
+    status: dict = Depends(refresh_session_and_set_cookies)
+):
+    return status
+
+
+@router.post("/login/")
+async def login(
+    result: dict = Depends(login_and_set_cookies)
+):
+    return result
+
+
 @router.get("/logout/")
 async def logout(response: Response):
     response.delete_cookie(key="refresh_token")
+    response.delete_cookie(key="access_token")
     return {"message": "logged out"}
