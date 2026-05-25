@@ -10,10 +10,10 @@ class AuthService:
     def __init__(self, user_service: UserService):
         self.user_service = user_service
 
-    @staticmethod
-    def generate_tokens(user_id: str) -> tuple[str, str]:
-        access_token = jwt_security.create_access_token(uid=user_id)
-        refresh_token = jwt_security.create_refresh_token(uid=user_id)
+    def generate_tokens(self, user_id: int) -> tuple[str, str]:
+        uid_str = str(user_id)
+        access_token = jwt_security.create_access_token(uid=uid_str)
+        refresh_token = jwt_security.create_refresh_token(uid=uid_str)
         return access_token, refresh_token
 
     async def register(self, data: UserRegister) -> User:
@@ -24,8 +24,12 @@ class AuthService:
 
     async def authenticate(self, data: UserLogin) -> tuple[str, str]:
         user = await self.user_service.get_user_by_email(data.email)
-        password = data.password.get_secret_value()
-        if not user or not verify_password(plain_password=password, hashed_password=user.password):
+
+        if not user:
             raise InvalidAuthCredentials()
 
-        return self.generate_tokens(str(user.id))
+        password = data.password.get_secret_value()
+        if not not verify_password(plain_password=password, hashed_password=user.password):
+            raise InvalidAuthCredentials()
+
+        return self.generate_tokens(user.id)
