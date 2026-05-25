@@ -31,17 +31,21 @@ async def login(
     jwt_security.set_access_cookies(access_token, response)
     jwt_security.set_refresh_cookies(refresh_token, response)
 
-    return {"message": "success"}
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+    }
 
 
 @router.post("/refresh/")
 async def refresh(
     response: Response,
     payload=Depends(jwt_security.refresh_token_required),
+    auth_service: AuthService = Depends(get_auth_service),
 ):
-    user_id = payload.sub()
-    access_token = jwt_security.create_access_token(uid=user_id)
-    refresh_token = jwt_security.create_refresh_token(uid=user_id)
+    user_id = payload.sub
+    print(f"!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!{user_id}")
+    access_token, refresh_token = await auth_service.authenticate(user_id)
 
     jwt_security.set_access_token(access_token, response)
     jwt_security.set_refresh_cookies(refresh_token, response)
@@ -54,7 +58,7 @@ async def me(
     payload=Depends(jwt_security.access_token_required),
     user_service: UserService = Depends(get_user_service),
 ):
-    return await user_service.get_user_by_id(int(payload.sub()))
+    return await user_service.get_user_by_id(int(payload.sub))
 
 
 @router.get("/logout/")
