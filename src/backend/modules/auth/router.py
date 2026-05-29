@@ -44,6 +44,6 @@ async def login(
 
 @router.get("/logout/")
 async def logout(response: Response):
-    response.delete_cookie(key="refresh_token")
-    response.delete_cookie(key="access_token")
+    jwt_security.unset_refresh_cookies(response)
+    jwt_security.unset_access_cookies(response)
     return {"message": "logged out"}
