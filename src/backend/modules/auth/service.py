@@ -29,7 +29,7 @@ class AuthService:
             raise InvalidAuthCredentials()
 
         password = data.password.get_secret_value()
-        if not not verify_password(plain_password=password, hashed_password=user.password):
+        if not verify_password(plain_password=password, hashed_password=user.password):
             raise InvalidAuthCredentials()
 
         return self.generate_tokens(user.id)
