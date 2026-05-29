@@ -41,7 +41,7 @@ async def refresh_session_and_set_cookies(
     response: Response,
     payload = Depends(jwt_security.refresh_token_required),
     auth_service: AuthService = Depends(get_auth_service),
-):
+) -> dict:
     access_token, refresh_token = auth_service.generate_tokens(int(payload.sub))
 
     jwt_security.set_access_cookies(access_token, response)
