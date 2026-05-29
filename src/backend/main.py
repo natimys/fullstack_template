@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
 
+settings = get_settings()
 app = FastAPI(swagger_ui_init_oauth={})
 bearer_scheme = HTTPBearer()
 
