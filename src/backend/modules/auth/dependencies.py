@@ -1,5 +1,3 @@
-from uuid import UUID
-
 from authx import TokenPayload
 from core.security import jwt_security
 from fastapi import Depends, Response
@@ -21,8 +19,8 @@ async def get_current_user(
     token: TokenPayload = Depends(jwt_security),
     user_service: UserService = Depends(get_user_service),
 ) -> User:
-    user_id = UUID(token.sub)
-    user = await user_service.get_user_by_id(int(user_id))
+    user_id = int(token.sub)
+    user = await user_service.get_user_by_id(user_id)
     return user
 
 
@@ -41,8 +39,10 @@ async def refresh_session_and_set_cookies(
     response: Response,
     payload = Depends(jwt_security.refresh_token_required),
     auth_service: AuthService = Depends(get_auth_service),
-) -> dict:
-    access_token, refresh_token = auth_service.generate_tokens(int(payload.sub))
+    user_service: UserService = Depends(get_user_service),
+):
+    user = await user_service.get_user_by_id(int(payload.sub))
+    access_token, refresh_token = auth_service.generate_tokens(user.id, user_role=user.role)
 
     jwt_security.set_access_cookies(access_token, response)
     jwt_security.set_refresh_cookies(refresh_token, response)

@@ -1,16 +1,20 @@
+from authx import RateLimiter
 from core.security import jwt_security
-from fastapi import APIRouter, Depends, HTTPException, Response
-from loguru import logger
+from fastapi import APIRouter, Depends, Response
 
 from ..users.dependencies import get_user_service
 from ..users.service import UserService
-from .dependencies import get_auth_service, login_and_set_cookies, refresh_session_and_set_cookies
+from .dependencies import (
+    get_auth_service,
+    login_and_set_cookies,
+    refresh_session_and_set_cookies,
+)
 from .module import module
-from .schemas import UserLogin, UserPublic, UserRegister
+from .schemas import UserPublic, UserRegister
 from .service import AuthService
 
-router = APIRouter(prefix=module.router_prefix, tags=module.router_tags)
-
+limiter = RateLimiter(max_requests=3, window=60)
+router = APIRouter(prefix=module.router_prefix, tags=module.router_tags, dependencies=[Depends(limiter)])
 
 @router.post("/register/", response_model=UserPublic)
 async def register(
@@ -29,16 +33,12 @@ async def me(
 
 
 @router.post("/refresh/")
-async def refresh(
-    status: dict = Depends(refresh_session_and_set_cookies)
-):
+async def refresh(status: dict = Depends(refresh_session_and_set_cookies)):
     return status
 
 
 @router.post("/login/")
-async def login(
-    result: dict = Depends(login_and_set_cookies)
-):
+async def login(result: dict = Depends(login_and_set_cookies)):
     return result
 
 

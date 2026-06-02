@@ -1,3 +1,4 @@
+from core.enums import UserRole
 from core.exceptions import InvalidAuthCredentials
 from core.security import jwt_security, verify_password
 
@@ -10,9 +11,12 @@ class AuthService:
     def __init__(self, user_service: UserService):
         self.user_service = user_service
 
-    def generate_tokens(self, user_id: int) -> tuple[str, str]:
+    def generate_tokens(self, user_id: int, user_role: UserRole | None = None) -> tuple[str, str]:
         uid_str = str(user_id)
-        access_token = jwt_security.create_access_token(uid=uid_str)
+        kwargs = {"uid": uid_str}
+        if user_role:
+            kwargs["role"] = user_role.value
+        access_token = jwt_security.create_access_token(**kwargs)
         refresh_token = jwt_security.create_refresh_token(uid=uid_str)
         return access_token, refresh_token
 
@@ -32,4 +36,4 @@ class AuthService:
         if not verify_password(plain_password=password, hashed_password=user.password):
             raise InvalidAuthCredentials()
 
-        return self.generate_tokens(user.id)
+        return self.generate_tokens(user.id, user_role=user.role)
