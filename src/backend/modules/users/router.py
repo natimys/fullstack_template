@@ -1,5 +1,3 @@
-from core.dependencies import require_role
-from core.enums import UserRole
 from fastapi import APIRouter, Depends, HTTPException
 
 from .dependencies import get_user_service
@@ -10,7 +8,6 @@ from .service import UserService
 router = APIRouter(
     prefix=module.router_prefix,
     tags=module.router_tags,
-    dependencies=[Depends(require_role(UserRole.ADMIN))],
 )
 
 
@@ -40,16 +37,13 @@ async def create_user(
     data: UserCreate,
     user_service: UserService = Depends(get_user_service),
 ):
-    try:
-        user = await user_service.create_user(
-            email=data.email,
-            name=data.name,
-            password=data.password,
-            role=data.role,
-        )
-        return user
-    except Exception as e:
-        raise HTTPException(status_code=409, detail=str(e))
+    user = await user_service.create_user(
+        email=data.email,
+        name=data.name,
+        password=data.password.get_secret_value(),
+        role=data.role,
+    )
+    return user
 
 
 @router.patch("/{user_id}", response_model=UserRead)
@@ -58,10 +52,7 @@ async def update_user(
     data: UserUpdate,
     user_service: UserService = Depends(get_user_service),
 ):
-    user = await user_service.update_user(
-        user_id,
-        **data.model_dump(exclude_unset=True),
-    )
+    user = await user_service.update_user(user_id, data)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user

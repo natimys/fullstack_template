@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr, SecretStr
 
+from core.enums import UserRole
+
 
 class UserRead(BaseModel):
     id: int
@@ -15,13 +17,13 @@ class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: SecretStr
-    role: str = "user"
+    role: UserRole = UserRole.USER
 
 
 class UserUpdate(BaseModel):
     name: str | None = None
     email: EmailStr | None = None
-    password: str | None = None
+    password: SecretStr | None = None
     role: str | None = None
     is_active: bool | None = None
 

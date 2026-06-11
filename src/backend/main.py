@@ -1,16 +1,37 @@
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+
 import uvicorn
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from loguru import logger
+
 from core.exceptions import AppException
 from core.modules import register_modules
 from core.security import jwt_security
 from core.settings import get_settings
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.security import HTTPBearer
+from database.engine import create_engine_and_sessionmaker
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    settings = get_settings()
+    engine, session_maker = create_engine_and_sessionmaker(
+        settings.DATABASE_URL,
+        echo=settings.DEBUG,
+    )
+    app.state.engine = engine
+    app.state.session_maker = session_maker
+
+    yield
+
+    await engine.dispose()
+    logger.info("Database engine disposed")
+
 
 settings = get_settings()
-app = FastAPI(swagger_ui_init_oauth={})
-bearer_scheme = HTTPBearer()
+app = FastAPI(lifespan=lifespan, swagger_ui_init_oauth={})
 
 jwt_security.handle_errors(app)
 
@@ -31,10 +52,16 @@ async def app_exception_handler(request: Request, exc: AppException):
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.detail})
 
 
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    logger.opt(exception=exc).error("Unhandled exception")
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
+
+
 @app.get("/")
 async def root():
     return {"message": "ok"}
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

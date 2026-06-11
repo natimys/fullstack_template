@@ -1,4 +1,3 @@
-from authx import RateLimiter
 from core.security import jwt_security
 from fastapi import APIRouter, Depends, Response
 
@@ -13,7 +12,6 @@ from .module import module
 from .schemas import UserPublic, UserRegister
 from .service import AuthService
 
-limiter = RateLimiter(max_requests=3, window=60)
 router = APIRouter(prefix=module.router_prefix, tags=module.router_tags)
 
 
@@ -39,10 +37,7 @@ async def refresh(status: dict = Depends(refresh_session_and_set_cookies)):
 
 
 @router.post("/login/")
-async def login(
-    result: dict = Depends(login_and_set_cookies),
-    rate_limiter: RateLimiter = Depends(limiter),
-):
+async def login(result: dict = Depends(login_and_set_cookies)):
     return result
 
 

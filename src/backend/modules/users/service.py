@@ -1,9 +1,10 @@
+from core.enums import UserRole
 from core.exceptions import UserAlreadyExists
 from core.security import hash_password
 
 from .models import User
-from core.enums import UserRole
 from .repository import UserRepository
+from .schemas import UserUpdate
 
 
 class UserService:
@@ -31,7 +32,9 @@ class UserService:
         )
         return user
 
-    async def create_user(self, email: str, name: str, password: str, role: UserRole = UserRole.USER) -> User:
+    async def create_user(
+        self, email: str, name: str, password: str, role: UserRole = UserRole.USER
+    ) -> User:
         user_exists = await self.repository.get_user_by_email(email)
         if user_exists:
             raise UserAlreadyExists()
@@ -39,13 +42,18 @@ class UserService:
             email, name, hash_password(password), role=role
         )
 
-    async def update_user(self, user_id: int, **kwargs) -> User | None:
+    async def update_user(self, user_id: int, data: UserUpdate) -> User | None:
         user = await self.repository.get_user_by_id(user_id)
         if not user:
             return None
-        if "password" in kwargs and kwargs["password"]:
-            kwargs["password"] = hash_password(kwargs["password"])
-        for key, value in kwargs.items():
+        update_data = data.model_dump(exclude_unset=True)
+        if "password" in update_data and update_data["password"] is not None:
+            update_data["password"] = hash_password(
+                update_data["password"].get_secret_value()
+            )
+        elif "password" in update_data:
+            del update_data["password"]
+        for key, value in update_data.items():
             if value is not None and hasattr(user, key):
                 setattr(user, key, value)
         return await self.repository.update_user(user)

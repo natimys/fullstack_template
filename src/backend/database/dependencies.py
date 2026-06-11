@@ -1,6 +1,7 @@
-from database.engine import async_session_maker
+from fastapi import Request
 
 
-async def get_db():
-    async with async_session_maker() as session:
+async def get_db(request: Request):
+    session_maker = request.app.state.session_maker
+    async with session_maker() as session:
         yield session
