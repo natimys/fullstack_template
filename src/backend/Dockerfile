@@ -23,8 +23,8 @@ WORKDIR /app
 COPY --from=builder /app/.venv /app/.venv
 COPY --from=builder /app/src/backend /app/src/backend
 
-COPY src/backend/alembic.ini .
-COPY src/backend/alembic ./alembic
+COPY src/backend/alembic.ini /app/src/backend/
+COPY src/backend/alembic /app/src/backend/alembic
 
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/src"

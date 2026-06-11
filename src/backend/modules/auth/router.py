@@ -14,7 +14,8 @@ from .schemas import UserPublic, UserRegister
 from .service import AuthService
 
 limiter = RateLimiter(max_requests=3, window=60)
-router = APIRouter(prefix=module.router_prefix, tags=module.router_tags, dependencies=[Depends(limiter)])
+router = APIRouter(prefix=module.router_prefix, tags=module.router_tags)
+
 
 @router.post("/register/", response_model=UserPublic)
 async def register(
@@ -38,7 +39,10 @@ async def refresh(status: dict = Depends(refresh_session_and_set_cookies)):
 
 
 @router.post("/login/")
-async def login(result: dict = Depends(login_and_set_cookies)):
+async def login(
+    result: dict = Depends(login_and_set_cookies),
+    rate_limiter: RateLimiter = Depends(limiter),
+):
     return result
 
 
