@@ -36,7 +36,9 @@ def rollback(
 @app.command()
 def revision(
     message: str = typer.Argument(..., help="Revision message"),
-    autogenerate: bool = typer.Option(True, "--autogenerate/--blank", help="Auto-detect changes"),
+    autogenerate: bool = typer.Option(
+        True, "--autogenerate/--blank", help="Auto-detect changes"
+    ),
 ):
     cmd = ["revision"]
     if autogenerate:

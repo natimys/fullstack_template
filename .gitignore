@@ -1,3 +1,15 @@
 .env
+.env.*
+!.env.example
 .venv
+.uv-cache
 __pycache__
+node_modules
+.next
+.pytest_cache
+*.egg-info
+next-env.d.ts
+.idea/
+*.db
+*.sqlite
+*.sqlite3

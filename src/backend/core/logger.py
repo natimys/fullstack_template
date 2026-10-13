@@ -7,6 +7,7 @@ from loguru import logger
 
 def timer_logger(func):
     if asyncio.iscoroutinefunction(func):
+
         @wraps(func)
         async def async_wrapper(*args, **kwargs):
             start = time.perf_counter()
@@ -15,6 +16,7 @@ def timer_logger(func):
             finally:
                 elapsed = time.perf_counter() - start
                 logger.debug(f"{func.__name__} took {elapsed:.4f}s")
+
         return async_wrapper
 
     @wraps(func)
@@ -25,4 +27,5 @@ def timer_logger(func):
         finally:
             elapsed = time.perf_counter() - start
             logger.debug(f"{func.__name__} took {elapsed:.4f}s")
+
     return sync_wrapper

@@ -9,7 +9,7 @@ from loguru import logger
 
 from core.exceptions import AppException
 from core.modules import register_modules
-from core.security import jwt_security
+from core.security import register_auth_error_handlers
 from core.settings import get_settings
 from database.engine import create_engine_and_sessionmaker
 
@@ -24,16 +24,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     app.state.engine = engine
     app.state.session_maker = session_maker
 
-    yield
-
-    await engine.dispose()
-    logger.info("Database engine disposed")
+    try:
+        yield
+    finally:
+        await engine.dispose()
+        logger.info("Database engine disposed")
 
 
 settings = get_settings()
 app = FastAPI(lifespan=lifespan, swagger_ui_init_oauth={})
 
-jwt_security.handle_errors(app)
+register_auth_error_handlers(app)
 
 register_modules(app)
 
@@ -61,6 +62,11 @@ async def unhandled_exception_handler(request: Request, exc: Exception):
 @app.get("/")
 async def root():
     return {"message": "ok"}
+
+
+@app.get("/healthz", include_in_schema=False)
+async def healthz():
+    return {"status": "ok"}
 
 
 if __name__ == "__main__":

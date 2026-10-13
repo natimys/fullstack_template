@@ -1,11 +1,11 @@
-from core.security import jwt_security
 from fastapi import APIRouter, Depends, Response
+from core.dependencies import get_current_user
+from core.security import jwt_security
 
-from ..users.dependencies import get_user_service
-from ..users.service import UserService
 from .dependencies import (
     get_auth_service,
     login_and_set_cookies,
+    logout_session,
     refresh_session_and_set_cookies,
 )
 from .module import module
@@ -25,10 +25,9 @@ async def register(
 
 @router.get("/me/", response_model=UserPublic)
 async def me(
-    payload=Depends(jwt_security.access_token_required),
-    user_service: UserService = Depends(get_user_service),
+    user=Depends(get_current_user),
 ):
-    return await user_service.get_user_by_id(int(payload.sub))
+    return user
 
 
 @router.post("/refresh/")
@@ -41,8 +40,8 @@ async def login(result: dict = Depends(login_and_set_cookies)):
     return result
 
 
-@router.get("/logout/")
-async def logout(response: Response):
+@router.post("/logout/")
+async def logout(response: Response, _=Depends(logout_session)):
     jwt_security.unset_refresh_cookies(response)
     jwt_security.unset_access_cookies(response)
     return {"message": "logged out"}

@@ -19,7 +19,9 @@ def _compose(*args: str) -> int:
 @app.command()
 def up(
     services: list[str] = typer.Argument(None, help="Services to start (default: all)"),
-    build: bool = typer.Option(False, "--build", "-b", help="Rebuild images before starting"),
+    build: bool = typer.Option(
+        False, "--build", "-b", help="Rebuild images before starting"
+    ),
 ):
     cmd = ["up", "-d"]
     if build:
@@ -40,7 +42,9 @@ def down(
 
 @app.command()
 def restart(
-    services: list[str] = typer.Argument(None, help="Services to restart (default: all)"),
+    services: list[str] = typer.Argument(
+        None, help="Services to restart (default: all)"
+    ),
 ):
     _compose("down")
     cmd = ["up", "-d"]
@@ -51,7 +55,9 @@ def restart(
 @app.command()
 def logs(
     service: str = typer.Argument(None, help="Service name"),
-    follow: bool = typer.Option(True, "--follow/--no-follow", "-f", help="Follow log output"),
+    follow: bool = typer.Option(
+        True, "--follow/--no-follow", "-f", help="Follow log output"
+    ),
     tail: int = typer.Option(100, "--tail", "-t", help="Number of lines to show"),
 ):
     cmd = ["logs"]
@@ -70,7 +76,9 @@ def status():
 
 @app.command()
 def rebuild(
-    services: list[str] = typer.Argument(None, help="Services to rebuild (default: all)"),
+    services: list[str] = typer.Argument(
+        None, help="Services to rebuild (default: all)"
+    ),
 ):
     _compose("build", *(services or []))
     _compose("up", "-d", "--force-recreate", *(services or []))
@@ -84,7 +92,11 @@ def init(
         env_file = ROOT / ".env"
         env_example = ROOT / ".env.example"
         if not env_file.exists() and env_example.exists():
-            env_file.write_text(env_example.read_text(encoding="utf-8"), encoding="utf-8")
+            env_file.write_text(
+                env_example.read_text(encoding="utf-8"), encoding="utf-8"
+            )
             console.print("[green].env created from .env.example[/green]")
         else:
-            console.print("[yellow].env already exists or .env.example missing[/yellow]")
+            console.print(
+                "[yellow].env already exists or .env.example missing[/yellow]"
+            )

@@ -62,9 +62,9 @@ def create(
 
 module = ModuleDefinition(
     active=True,
-    name="{vars['module_name']}",
-    router_prefix="/{vars['module_name']}",
-    router_tags=["{vars['module_name']}"],
+    name="{vars["module_name"]}",
+    router_prefix="/{vars["module_name"]}",
+    router_tags=["{vars["module_name"]}"],
 )
 """
     (dest / "module.py").write_text(module_py.strip() + "\n")
@@ -93,7 +93,9 @@ def toggle(module_name: str = typer.Argument(..., help="Module name to toggle"))
 
     module_py.write_text(content, encoding="utf-8")
     status = "enabled" if new_active else "disabled"
-    console.print(f"[green]Module '{module_name}' is now {status} ({'active=True' if new_active else 'active=False'})[/green]")
+    console.print(
+        f"[green]Module '{module_name}' is now {status} ({'active=True' if new_active else 'active=False'})[/green]"
+    )
 
 
 @app.command()

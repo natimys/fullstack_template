@@ -1,3 +1,3 @@
 #!/bin/bash
-alembic upgrade head
+alembic -c /app/alembic.ini upgrade head
 exec uvicorn backend.main:app --host 0.0.0.0 --port 8000

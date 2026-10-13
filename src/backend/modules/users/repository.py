@@ -1,4 +1,4 @@
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 
 from .models import User
 from core.enums import UserRole
@@ -45,3 +45,24 @@ class UserRepository:
     async def delete_user(self, user: User) -> None:
         await self.db.delete(user)
         await self.db.commit()
+
+    async def rotate_session_version(
+        self, user_id: int, expected_version: int
+    ) -> int | None:
+        statement = (
+            update(User)
+            .where(
+                User.id == user_id,
+                User.session_version == expected_version,
+                User.is_active.is_(True),
+            )
+            .values(session_version=User.session_version + 1)
+            .returning(User.session_version)
+        )
+        result = await self.db.execute(statement)
+        next_version = result.scalar_one_or_none()
+        if next_version is None:
+            await self.db.rollback()
+            return None
+        await self.db.commit()
+        return next_version

@@ -17,6 +17,11 @@ class UserService:
     async def get_user_by_email(self, email: str) -> User | None:
         return await self.repository.get_user_by_email(email)
 
+    async def rotate_session_version(
+        self, user_id: int, expected_version: int
+    ) -> int | None:
+        return await self.repository.rotate_session_version(user_id, expected_version)
+
     async def list_users(self, page: int = 1, size: int = 10) -> tuple[list[User], int]:
         skip = (page - 1) * size
         users = await self.repository.get_users(skip=skip, limit=size)
@@ -47,6 +52,7 @@ class UserService:
         if not user:
             return None
         update_data = data.model_dump(exclude_unset=True)
+        role_changed = "role" in update_data and update_data["role"] != user.role
         if "password" in update_data and update_data["password"] is not None:
             update_data["password"] = hash_password(
                 update_data["password"].get_secret_value()
@@ -56,6 +62,12 @@ class UserService:
         for key, value in update_data.items():
             if value is not None and hasattr(user, key):
                 setattr(user, key, value)
+        if (
+            update_data.get("is_active") is False
+            or "password" in update_data
+            or role_changed
+        ):
+            user.session_version += 1
         return await self.repository.update_user(user)
 
     async def delete_user(self, user_id: int) -> bool:

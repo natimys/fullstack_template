@@ -1,11 +1,24 @@
 import axios from "axios";
 
 export const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000",
+  baseURL: "/api",
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+apiClient.interceptors.request.use((config) => {
+  if (typeof document !== "undefined" && !["get", "head", "options"].includes((config.method || "get").toLowerCase())) {
+    const needsRefreshCsrf = config.url?.includes("/refresh/") || config.url?.includes("/logout/");
+    const csrfCookie = document.cookie.split("; ").find((cookie) =>
+      cookie.startsWith(needsRefreshCsrf ? "csrf_refresh_token=" : "csrf_access_token="),
+    );
+    if (csrfCookie) {
+      config.headers.set("X-CSRF-TOKEN", decodeURIComponent(csrfCookie.split("=").slice(1).join("=")));
+    }
+  }
+  return config;
 });
 
 apiClient.interceptors.response.use(

@@ -8,13 +8,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 class Settings(BaseSettings):
-    DB_HOST: str = "localhost"
+    DB_HOST: str = "db"
     DB_PORT: int = 5432
-    DB_USER: str = "postgres"
-    DB_PASSWORD: str = "postgres"
-    DB_NAME: str = "postgres"
+    DB_USER: str
+    DB_PASSWORD: SecretStr
+    DB_NAME: str
 
-    REDIS_URL: str
     JWT_SECURITY_KEY: SecretStr
 
     CORS_ORIGINS: list[str]
@@ -26,6 +25,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRES: int
 
     DEBUG: bool = False
+    JWT_COOKIE_SECURE: bool = False
+    JWT_COOKIE_SAMESITE: str = "lax"
 
     model_config = SettingsConfigDict(
         env_file=BASE_DIR / ".env",
@@ -37,19 +38,42 @@ class Settings(BaseSettings):
     @field_validator("JWT_SECURITY_KEY", mode="after")
     @classmethod
     def check_default_key(cls, value: SecretStr) -> SecretStr:
-        if value.get_secret_value() == "CHANGE-THIS-PLEASE":
-            raise ValueError(
-                "JWT_SECURITY_KEY must be changed from default. Change it please"
-            )
+        raw = value.get_secret_value()
+        if len(raw) < 32 or raw.lower().startswith(("change", "replace", "example")):
+            raise ValueError("JWT_SECURITY_KEY must contain at least 32 characters")
+        return value
+
+    @field_validator("DB_PASSWORD")
+    @classmethod
+    def check_default_database_password(cls, value: SecretStr) -> SecretStr:
+        raw = value.get_secret_value()
+        if not raw or raw.lower().startswith(
+            ("change", "replace", "example", "password")
+        ):
+            raise ValueError("DB_PASSWORD must be set to a unique value")
+        return value
+
+    @field_validator("JWT_COOKIE_SAMESITE")
+    @classmethod
+    def validate_samesite(cls, value: str) -> str:
+        value = value.lower()
+        if value not in {"lax", "strict", "none"}:
+            raise ValueError("JWT_COOKIE_SAMESITE must be lax, strict, or none")
         return value
 
     @property
     def DATABASE_URL(self) -> str:
-        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        from urllib.parse import quote_plus
+
+        password = quote_plus(self.DB_PASSWORD.get_secret_value())
+        return f"postgresql+asyncpg://{self.DB_USER}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     @property
     def ALEMBIC_DATABASE_URL(self) -> str:
-        return f"postgresql+psycopg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
+        from urllib.parse import quote_plus
+
+        password = quote_plus(self.DB_PASSWORD.get_secret_value())
+        return f"postgresql+psycopg://{self.DB_USER}:{password}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
 
 @lru_cache
